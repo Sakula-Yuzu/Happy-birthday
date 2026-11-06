@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
 <script id="birthday-config" type="application/json">{
-  "_说明": "通用款：同张家梦订首页星河+蛋糕页（含便签开场和点开的信），不含花海页/信件页。不含任何真名、年龄、具体日期，文字适合送朋友/恋人/家人。name/name_en 留空、age=null（不显示年龄徽章）、birthdays=[]（日期行和倒计时自动隐藏）。文字里不要用 {name}/{name_en} 占位符（留空时会显示 **）。自检用 tools/check_generic.py configs/generic.json。",
   "slug": "hb-38177ca395",
   "pages": [
     "galaxy"
@@ -11,7 +10,7 @@
   "name_en": "",
   "age": null,
   "birthdays": [],
-  "countdown_done": "李文秋，生日快乐，愿你每一天都被温柔以待",
+  "countdown_done": "生日快乐，愿你每一天都被温柔以待",
   "page_title": "祝你生日快乐",
   "headline": "祝你生日快乐",
   "panel_sub": "希望你天天开心，永远幸福",
@@ -98,10 +97,10 @@
     "song3": "assets/music/song3.m4a"
   },
   "letter_main": {
-    "greeting": "致特别的你：",
+    "greeting": "致特李文秋：",
     "paragraphs": [
       "生日快乐！新的一岁到啦，先给你一个大大的拥抱。",
-      "我们已经认识十年啦~有你在的日子，总是多了很多温暖和笑声。那些一起分享的开心和烦恼，都让平凡的日子变得闪闪发光。",
+      "我们已经相识10年啦~有你在的日子，总是多了很多温暖和笑声。那些一起分享的开心和烦恼，都让平凡的日子变得闪闪发光。",
       "谢谢你一直以来的温柔和陪伴，不管遇到什么事，想到你就会觉得很安心。",
       "新的一岁，愿你所有的努力都有回报，所有的期待都能如愿，去喜欢的地方，见想见的人，做想做的事。",
       "最想对你说的还是那一句：希望你天天开心，永远幸福。"
@@ -210,51 +209,57 @@ html.bloomGo .panel{opacity:0;transform:scale(1.06);filter:blur(4px)}
 </head>
 <body>
 <div id="dateGate" style="position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:#050814;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased;">
-  <div style="text-align:center;padding:24px 20px;max-width:92vw;">
+  <div style="text-align:center;padding:28px 22px;max-width:92vw;width:320px;">
     <div style="font-size:13px;letter-spacing:.28em;color:rgba(200,210,255,.55);margin-bottom:18px;">SURPRISE LOCKED</div>
-    <div style="font-size:clamp(18px,4.5vw,28px);line-height:1.7;color:rgba(255,255,255,.92);">距离惊喜打开时间还剩</div>
-    <div id="dateGateCd" style="margin-top:14px;font-size:clamp(20px,5.2vw,32px);font-weight:600;letter-spacing:.04em;color:#f6d9a0;line-height:1.5;"></div>
-    <div style="margin-top:22px;font-size:12px;color:rgba(180,190,230,.45);letter-spacing:.12em;"></div>
+    <div style="font-size:clamp(18px,4.5vw,24px);line-height:1.7;color:rgba(255,255,255,.92);margin-bottom:22px;">输入姓名和密码开启惊喜</div>
+    <form id="gateForm" autocomplete="off" style="display:flex;flex-direction:column;gap:12px;align-items:stretch;">
+      <input id="gateName" type="text" placeholder="姓名" maxlength="20" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid rgba(200,210,255,.25);background:rgba(20,24,48,.85);color:#fff;font-size:16px;outline:none;letter-spacing:.05em;" />
+      <input id="gatePass" type="password" placeholder="密码" maxlength="20" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid rgba(200,210,255,.25);background:rgba(20,24,48,.85);color:#fff;font-size:16px;outline:none;letter-spacing:.15em;" />
+      <button type="submit" style="margin-top:6px;padding:12px 18px;border:0;border-radius:999px;background:linear-gradient(90deg,#6a7cff,#c070ff 55%,#ff9fb4);color:#fff;font-size:15px;font-weight:600;letter-spacing:.12em;cursor:pointer;">开启</button>
+      <div id="gateErr" style="min-height:20px;font-size:13px;color:#ff8fa8;opacity:0;transition:opacity .25s;"></div>
+    </form>
   </div>
 </div>
 <script>
 (function(){
-  var OPEN_M = 2, OPEN_D = 5; // March 5 (0-based month)
-  function nextOpen(now){
-    var y = now.getFullYear();
-    var start = new Date(y, OPEN_M, OPEN_D, 0, 0, 0, 0);
-    var end = new Date(y, OPEN_M, OPEN_D, 23, 59, 59, 999);
-    if (now.getTime() < start.getTime()) return start;
-    if (now.getTime() <= end.getTime()) return null; // open now
-    return new Date(y + 1, OPEN_M, OPEN_D, 0, 0, 0, 0);
+  var EXPECT_NAME = "李文秋";
+  var EXPECT_PASS = "0305";
+  var KEY = "hbGateUnlocked_v1";
+  var gate = document.getElementById("dateGate");
+  if (!gate) return;
+  function unlock(){
+    try { sessionStorage.setItem(KEY, "1"); } catch(e){}
+    if (gate.parentNode) gate.parentNode.removeChild(gate);
+    try { document.documentElement.style.overflow = ""; document.body.style.overflow = ""; } catch(e){}
   }
-  function pad(n){ return n < 10 ? "0" + n : "" + n; }
-  function render(){
-    var now = new Date();
-    var target = nextOpen(now);
-    var gate = document.getElementById("dateGate");
-    var cd = document.getElementById("dateGateCd");
-    if (!gate) return;
-    if (!target){
-      if (gate.parentNode) gate.parentNode.removeChild(gate);
-      return true;
-    }
-    var ms = Math.max(0, target.getTime() - now.getTime());
-    var days = Math.floor(ms / 864e5);
-    var h = Math.floor(ms % 864e5 / 36e5);
-    var m = Math.floor(ms % 36e5 / 6e4);
-    var s = Math.floor(ms % 6e4 / 1e3);
-    if (cd) cd.textContent = days + "天" + pad(h) + "小时" + pad(m) + "分钟" + pad(s) + "秒";
-    return false;
-  }
-  if (render()) return;
+  try {
+    if (sessionStorage.getItem(KEY) === "1") { unlock(); return; }
+  } catch(e){}
   try { document.documentElement.style.overflow = "hidden"; document.body.style.overflow = "hidden"; } catch(e){}
-  setInterval(function(){
-    if (render()) location.reload();
-  }, 1000);
+  var form = document.getElementById("gateForm");
+  var nameEl = document.getElementById("gateName");
+  var passEl = document.getElementById("gatePass");
+  var errEl = document.getElementById("gateErr");
+  function showErr(msg){
+    if (!errEl) return;
+    errEl.textContent = msg || "";
+    errEl.style.opacity = msg ? "1" : "0";
+  }
+  if (form) form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var name = (nameEl && nameEl.value || "").replace(/\s+/g, "").trim();
+    var pass = (passEl && passEl.value || "").trim();
+    if (name === EXPECT_NAME && pass === EXPECT_PASS){
+      showErr("");
+      unlock();
+    } else {
+      showErr("姓名或密码不正确");
+      if (passEl) { passEl.value = ""; passEl.focus(); }
+    }
+  });
+  setTimeout(function(){ try { nameEl && nameEl.focus(); } catch(e){} }, 80);
 })();
 </script>
-
 <script>try{(function(){var c=sessionStorage.getItem("sjNav");if(!c||!/^#[0-9a-fA-F]{3,8}$/.test(c))return;sessionStorage.removeItem("sjNav");document.write('<div id="navIn" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483000;pointer-events:none;background:'+c+';transition:opacity 1.1s ease"></div>');var done=false;function f(){if(done)return;done=true;var d=document.getElementById("navIn");if(d){d.style.opacity="0";setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},1300)}}addEventListener("load",function(){setTimeout(f,120)});setTimeout(f,2600)})()}catch(e){}</script>
 <style>
 @font-face{font-family:"IZmx";src:url(data:font/woff;base64,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) format("woff");font-display:block}
